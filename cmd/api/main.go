@@ -34,7 +34,7 @@ func main() {
 	go func() {
 		fmt.Printf("API listening on %s\n", server.Addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "server error: %v\n", err)
 			os.Exit(1)
 		}
 	}()
@@ -48,7 +48,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "shutdown error: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "shutdown error: %v\n", err)
 	}
 }
 
