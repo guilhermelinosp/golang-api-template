@@ -4,17 +4,32 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/guilhermelinosp/hellnet-lib-telemetry/telemetry"
 )
 
 func main() {
+	ops, err := telemetry.New(telemetry.Options{
+		ServiceName: "golang-api-template",
+		Enabled:     os.Getenv("HELLNET_TELEMETRY_ENABLED") == "true",
+	})
+	if err != nil {
+		log.Fatalf("failed to init telemetry: %v", err)
+	}
+	defer func() { _ = ops.Shutdown() }()
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", healthHandler)
+	mux.Handle("GET /live", ops.Live())
+	mux.Handle("GET /ready", ops.Ready())
+	mux.Handle("GET /health", ops.Health())
+	mux.Handle("GET /metrics", ops.MetricsHandler())
 	mux.HandleFunc("/", rootHandler)
 
 	port := os.Getenv("PORT")
@@ -24,38 +39,30 @@ func main() {
 
 	server := &http.Server{
 		Addr:         ":" + port,
-		Handler:      mux,
+		Handler:      telemetry.Middleware(ops, mux),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// Start server in a goroutine.
 	go func() {
-		fmt.Printf("API listening on %s\n", server.Addr)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			_, _ = fmt.Fprintf(os.Stderr, "server error: %v\n", err)
+		ops.Log().Info("API listening", "addr", server.Addr)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			ops.Log().Error("server error", "error", err)
 			os.Exit(1)
 		}
 	}()
 
-	// Wait for interrupt signal.
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig
 
-	fmt.Println("shutting down gracefully...")
+	ops.Log().Info("shutting down gracefully")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "shutdown error: %v\n", err)
+		ops.Log().Error("shutdown error", "error", err)
 	}
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"status":"ok"}`))
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
