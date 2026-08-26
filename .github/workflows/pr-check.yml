@@ -21,3 +21,17 @@ jobs:
 
   labeler:
     uses: guilhermelinosp/ci-templates/.github/workflows/labeler.yml@main
+
+  # Go quality gates for every PR.
+  go-test:
+    uses: guilhermelinosp/ci-templates/.github/workflows/go-test.yml@main
+    with:
+      go-version-file: go.mod
+
+  go-lint:
+    uses: guilhermelinosp/ci-templates/.github/workflows/golangci.yml@main
+
+  security:
+    permissions:
+      contents: read
+    uses: guilhermelinosp/ci-templates/.github/workflows/dependency-review.yml@main
