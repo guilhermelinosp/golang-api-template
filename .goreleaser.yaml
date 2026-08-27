@@ -12,8 +12,12 @@ builds:
     binary: api
     env:
       - CGO_ENABLED=0
+    # -trimpath belongs to the BUILD flags, NOT to -ldflags (the linker
+    # rejects it and the build dies with usage text).
+    goflags:
+      - -trimpath
     ldflags:
-      - -s -w -trimpath
+      - -s -w
       - -X main.version={{.Version}}
       - -X main.commit={{.FullCommit}}
       - -X main.date={{.Date}}
