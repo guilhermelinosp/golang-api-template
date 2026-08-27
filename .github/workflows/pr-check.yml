@@ -22,5 +22,8 @@ jobs:
   labeler:
     uses: guilhermelinosp/ci-templates/.github/workflows/labeler.yml@main
 
-  # Go quality gates (self-contained per org pattern): see go.yml
-  # (test/race/vet/tidy + golangci-lint + dependency-review + govulncheck).
+  # Single-import Go quality + security gate (see ci-templates/go-quality).
+  go-quality:
+    uses: guilhermelinosp/ci-templates/.github/workflows/go-quality.yml@main
+    with:
+      go-version-file: go.mod
