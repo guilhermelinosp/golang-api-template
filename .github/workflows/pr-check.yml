@@ -22,16 +22,5 @@ jobs:
   labeler:
     uses: guilhermelinosp/ci-templates/.github/workflows/labeler.yml@main
 
-  # Go quality gates for every PR.
-  # NOTE: reusable go-test.yml has no go-version-file input; "stable" handles
-  # the toolchain pinned in go.mod (backward compatible).
-  go-test:
-    uses: guilhermelinosp/ci-templates/.github/workflows/go-test.yml@main
-
-  go-lint:
-    uses: guilhermelinosp/ci-templates/.github/workflows/golangci.yml@main
-
-  security:
-    permissions:
-      contents: read
-    uses: guilhermelinosp/ci-templates/.github/workflows/dependency-review.yml@main
+  # Go quality gates (self-contained per org pattern): see go.yml
+  # (test/race/vet/tidy + golangci-lint + dependency-review + govulncheck).
