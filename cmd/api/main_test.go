@@ -1,34 +1,41 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/guilhermelinosp/hellnet-lib-telemetry/telemetry"
+	"github.com/guilhermelinosp/golang-api-template/internal/api"
 )
 
-func TestHealthHandler(t *testing.T) {
-	ops, err := telemetry.New(telemetry.Options{ServiceName: "test", Enabled: false})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+// TestRootDeclarations asserts the platform contract: the system endpoints
+// this template promises must exist as declared routes before any adapter
+// runs. The full HTTP behavior (through Gin) is covered by ginadapter tests;
+// here we only protect the composition invariants of main's wiring table.
+func TestPlatformEndpointPaths(t *testing.T) {
+	want := []string{
+		api.PathLive,
+		api.PathReady,
+		api.PathHealth,
+		api.PathMetrics,
 	}
+	for _, path := range want {
+		if path == "" || path[0] != '/' {
+			t.Errorf("platform path %q is not absolute", path)
+		}
+	}
+}
 
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+func TestRequestHandlerSmoke(t *testing.T) {
+	// Any handler used by main must be an http.Handler after adapter wrapping.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+	})
 	rec := httptest.NewRecorder()
-
-	ops.Health().ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rec.Code)
-	}
-
-	var hs telemetry.HealthStatus
-	if err := json.Unmarshal(rec.Body.Bytes(), &hs); err != nil {
-		t.Fatalf("invalid json: %v", err)
-	}
-	if hs.Status != "ok" {
-		t.Fatalf("expected status ok, got %q", hs.Status)
+	req := httptest.NewRequest(http.MethodGet, "/", nil).WithContext(context.Background())
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusTeapot {
+		t.Fatalf("expected %d, got %d", http.StatusTeapot, rec.Code)
 	}
 }

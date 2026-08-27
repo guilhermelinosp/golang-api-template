@@ -32,3 +32,6 @@ vendor/
 # Test
 coverage.out
 *.cover
+
+# Stray compiled binaries at repo root
+/api
