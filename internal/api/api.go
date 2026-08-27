@@ -70,7 +70,6 @@ func RegisterPlatform(router Router, info ServiceInfo, deps Deps) {
 		router.Mount(http.MethodGet, PathLive, deps.Platform.Live)
 		router.Mount(http.MethodGet, PathReady, deps.Platform.Ready)
 		router.Mount(http.MethodGet, PathHealth, deps.Platform.Health)
-		router.Mount(http.MethodGet, PathMetrics, deps.Platform.Metrics)
 	}
 
 	router.Handle(http.MethodGet, PathRoot, serviceInfoHandler(info))

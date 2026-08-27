@@ -86,17 +86,6 @@ paths:
         "200": { $ref: "#/components/responses/HealthOK" }
         "503": { $ref: "#/components/responses/HealthDegraded" }
 
-  /metrics:
-    get:
-      tags: [observability]
-      summary: Prometheus exposition endpoint
-      description: >
-        Backed by hellnet-lib-telemetry `MetricsHandler()`. Serves HTTP/runtime
-        metrics (http_requests_total, http_request_duration_seconds,
-        http_requests_inflight, ...) plus any registered health-check gauges.
-      operationId: getMetrics
-      responses:
-        "200":
           description: Prometheus text exposition format
           content:
             text/plain:

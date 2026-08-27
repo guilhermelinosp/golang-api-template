@@ -72,10 +72,9 @@ func run() error {
 		BuiltAt: cfg.Build.Date,
 	}, api.Deps{
 		Platform: api.PlatformHandlers{
-			Live:    platform.Live,
-			Ready:   platform.Ready,
-			Health:  platform.Health,
-			Metrics: platform.Metrics,
+			Live:   platform.Live,
+			Ready:  platform.Ready,
+			Health: platform.Health,
 		},
 		Routes: helloHandler.Routes(),
 	})
