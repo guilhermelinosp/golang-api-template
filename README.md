@@ -33,7 +33,6 @@ Business logic does not depend on Gin.
 | CI: test/lint/CodeQL/dependency-review/govulncheck | `.github/workflows` |
 | Release: semver tag → GH release → goreleaser binaries → image | org reusable workflows + GoReleaser |
 | Container (distroless, non-root, reproducible) | `Containerfile` |
-| Kubernetes base with correct probes | `deployments/kubernetes/base.yaml` |
 
 OpenTelemetry SDK wiring, Prometheus registry, health-check registry and log
 redaction are **not** re-implemented here by design.
@@ -203,7 +202,6 @@ internal/
 ├── hello/                   # reference module (replace me!)
 │   ├── service.go           #   business rules behind Service interface
 │   └── handler.go           #   route declarations + input binding
-deployments/kubernetes/base.yaml
 openapi/openapi.yaml         # contract of the REAL endpoints (kept honest)
 Containerfile · Makefile · .goreleaser.yaml · .github/workflows/*
 ```
@@ -265,20 +263,6 @@ windows/amd64 onto that same tag's release page.
 for modules/build cache, `-trimpath`, ldflags-injected metadata, non-root user,
 single static binary. Dev tools are absent from the runtime image by design.
 
-## Kubernetes
-
-Apply the base manifest:
-
-```bash
-kubectl apply -f deployments/kubernetes/base.yaml
-```
-
-* `livenessProbe` → `/live`, `readinessProbe` → `/ready`, plus `startupProbe`
-  (all served by hellnet-lib-telemetry — health logic lives in the library).
-* `readinessProbe` failures = failing dependency checks ⇒ traffic removed
-  without killing pods.
-* Probes/env map directly to documented variables; nothing invented twice.
-
 ---
 
 ## Recipes
@@ -288,8 +272,8 @@ kubectl apply -f deployments/kubernetes/base.yaml
 1. `Use this template` on GitHub → clone.
 2. Search-and-replace module name `guilhermelinosp/golang-api-template` in
    `go.mod` + imports.
-3. Rename `HELLNET_TELEMETRY_SERVICE` value wherever you configure it (repo
-   templates in `deployments/kubernetes/base.yaml`, `.env.example`).
+3. Rename `HELLNET_TELEMETRY_SERVICE` value wherever you configure it
+   (`.env.example`, your deployment platform of choice).
 4. Delete `internal/hello/*`, its registration lines in `cmd/api/main.go`,
    and the `/api/v1` paths in `openapi/openapi.yaml`.
 5. `make test && make run` → green baseline restored.

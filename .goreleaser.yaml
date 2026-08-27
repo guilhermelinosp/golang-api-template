@@ -1,3 +1,4 @@
+---
 version: 2
 
 project_name: golang-api-template
@@ -12,9 +13,10 @@ builds:
     binary: api
     env:
       - CGO_ENABLED=0
-    # -trimpath belongs to the BUILD flags, NOT to -ldflags (the linker
-    # rejects it and the build dies with usage text).
-    goflags:
+    # Custom flags passed to `go build`. -trimpath belongs here (build flags),
+    # NOT inside -ldflags: the linker rejects it with usage text.
+    # Reference for reproducible builds: docs "Reproducible Builds".
+    flags:
       - -trimpath
     ldflags:
       - -s -w
