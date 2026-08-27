@@ -34,10 +34,9 @@ func newTestRouter(t *testing.T, extra func(r *Router)) http.Handler {
 		// Fake platform handlers keep this suite focused on routing of
 		// mounted raw endpoints; the real ones come from hellnet-lib-telemetry.
 		Platform: api.PlatformHandlers{
-			Live:    okHandler("live"),
-			Ready:   okHandler("ready"),
-			Health:  okHandler("health"),
-			Metrics: okHandler("metrics"),
+			Live:   okHandler("live"),
+			Ready:  okHandler("ready"),
+			Health: okHandler("health"),
 		},
 	})
 	if extra != nil {
