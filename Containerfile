@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build: reproducible, minimal, non-root runtime.
 
-ARG GO_VERSION=1.26
+ARG GO_VERSION=1.27
 
 # ── Build stage ──────────────────────────────────────────────────────────────
 FROM docker.io/library/golang:${GO_VERSION}-alpine AS builder
