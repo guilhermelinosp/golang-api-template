@@ -1,5 +1,12 @@
 name: pipeline
 
+# Fully abstracted: every job is an import from ci-templates.
+# Flow on push to main:
+#   release (semver tag + GH Release)
+#     → go-quality (tidy/vet/race tests/build/lint/govulncheck; dep-review skips on push)
+#     → goreleaser-publish (binaries + checksums onto the tag's release)
+#     → image (buildah → GHCR)
+
 on:
   push:
     branches: [main]
@@ -11,54 +18,18 @@ jobs:
     uses: guilhermelinosp/ci-templates/.github/workflows/release.yml@main
     secrets: inherit
 
-  test:
+  quality:
     needs: [release]
-    uses: guilhermelinosp/ci-templates/.github/workflows/go-test.yml@main
+    uses: guilhermelinosp/ci-templates/.github/workflows/go-quality.yml@main
+    with:
+      go-version-file: go.mod
 
-  build:
-    needs: [release]
-    uses: guilhermelinosp/ci-templates/.github/workflows/go-build.yml@main
-
-  # Upload cross-platform binaries + checksums to the tag release created above.
   binaries:
     needs: [release]
-    runs-on: ubuntu-latest
+    uses: guilhermelinosp/ci-templates/.github/workflows/goreleaser-publish.yml@main
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-          cache: true
-      - name: Fetch tag created by release job
-        run: git fetch --tags --force && git checkout "$(git describe --tags --abbrev=0)"
-      - uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
 
   image:
-    needs: [build]
+    needs: [quality, binaries]
     uses: guilhermelinosp/ci-templates/.github/workflows/buildah.yml@main
-
-  # Supply-chain guard (stdlib-native vuln analysis with call-graph reachability).
-  govulncheck:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-          cache: true
-      - name: Run govulncheck
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...

@@ -246,9 +246,11 @@ same PR (keeping docs honest beats generating drift).
 
 | Workflow | Trigger | Contents |
 |---|---|---|
-| `pr-check` | PR | shellcheck · merge strategy/conventional commits · gitleaks · labeler · `go-test` · `golangci-lint` · dependency-review |
+| `pr-check` | PR | shellcheck · merge strategy/conventional commits · gitleaks · labeler · **go-quality** (tidy guard/vet/race tests/build/lint/govulncheck/dependency-review) |
 | `codeql` | PR→main | CodeQL security+quality (Go, actions) |
-| `pipeline` | push main | org release (semver tag + GH release) → go-test → build → **goreleaser artifacts/checksums upload** → container image → govulncheck |
+| `pipeline` | push main | org release (semver tag + GH Release) → go-quality → goreleaser artifacts/checksums upload → container image |
+
+Every job is an import from [ci-templates](https://github.com/guilhermelinosp/ci-templates) — this repository owns zero CI logic, only flow declarations. Reuse the same two files in any Go service.
 
 Releases trigger on tag push (created by the org `release` workflow with
 semver derived from conventional commits). GoReleaser ships archives +
