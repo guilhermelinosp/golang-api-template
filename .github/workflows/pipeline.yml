@@ -1,11 +1,11 @@
 name: pipeline
 
 # Fully abstracted: every job is an import from templates.
-# Triggered manually (workflow_dispatch) so a publish only happens on demand
-# and never re-publishes an existing goreleaser tag:
+# Triggered on push to main (outside .github) so a new release is cut per change.
+# The api runs as a container (buildah → GHCR), so no goreleaser binaries are
+# published — only the release tag + container image:
 #   release (semver tag + GH Release)
 #     → go-quality (tidy/vet/race tests/build/lint/govulncheck; dep-review skips on dispatch)
-#     → goreleaser-publish (binaries + checksums onto the tag's release)
 #     → image (buildah → GHCR)
 
 on:
@@ -28,12 +28,6 @@ jobs:
     with:
       go-version-file: go.mod
 
-  binaries:
-    needs: [release]
-    uses: guilhermelinosp/templates/.github/workflows/goreleaser-publish.yml@main
-    permissions:
-      contents: write
-
   image:
-    needs: [quality, binaries]
+    needs: [quality]
     uses: guilhermelinosp/templates/.github/workflows/buildah.yml@main
