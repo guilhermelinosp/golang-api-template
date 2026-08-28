@@ -9,6 +9,10 @@ name: pipeline
 #     → image (buildah → GHCR)
 
 on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '.github/**'
   workflow_dispatch:
 
 permissions: write-all
