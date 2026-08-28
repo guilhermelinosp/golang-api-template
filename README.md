@@ -370,3 +370,5 @@ stdlib → hellnet-lib-telemetry → gin all fail to solve the problem.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md).
 Licensed under [Apache 2.0](LICENSE).
+
+<!-- release pipeline verification -->
