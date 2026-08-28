@@ -66,10 +66,22 @@ type ServiceInfo struct {
 //
 // The caller owns router construction and middleware order (see ginadapter).
 func RegisterPlatform(router Router, info ServiceInfo, deps Deps) {
-	if deps.Platform.Valid() {
+	// Mount platform endpoints individually so a partial configuration still
+	// exposes the handlers it was given (e.g. live/ready/health during
+	// bootstrap, before metrics telemetry is wired). Each is mounted only when
+	// provided, so missing handlers degrade gracefully instead of taking the
+	// whole platform surface down.
+	if deps.Platform.Live != nil {
 		router.Mount(http.MethodGet, PathLive, deps.Platform.Live)
+	}
+	if deps.Platform.Ready != nil {
 		router.Mount(http.MethodGet, PathReady, deps.Platform.Ready)
+	}
+	if deps.Platform.Health != nil {
 		router.Mount(http.MethodGet, PathHealth, deps.Platform.Health)
+	}
+	if deps.Platform.Metrics != nil {
+		router.Mount(http.MethodGet, PathMetrics, deps.Platform.Metrics)
 	}
 
 	router.Handle(http.MethodGet, PathRoot, serviceInfoHandler(info))
